@@ -46,21 +46,31 @@
       "fault_class": "arithmetic_error",
       "evidence": {
         "metric": "answer_total_mismatch",
-        "observed": "prac-003 mixed 4*~22M VND with a final ~3.8M VND; prac-006 says 54,000,000*20%=6,400,000 and ends near 64,165 VND.",
+        "observed": "prac-003 mixed 4*~22M VND with a final ~3.8M VND; prac-006 says 54,000,000*20%=6,400,000 and ends near 64,165 VND. get_discount also intermittently returns a stacked (doubled) percent flagged _stacked=true: VIP20 20->40, SALE15 15->30, WINNER 10->20, which doubles the discount and corrupts the total.",
         "trace_ids": ["req-e80ebad8", "req-e9288be6"]
       },
-      "root_cause": "High temperature and a vague prompt make the model estimate and ramble instead of applying a fixed formula.",
-      "suggested_fix": "Set temperature=0.2 and prompt exact integer formulas: subtotal=unit_price*qty, discounted=subtotal*(100-pct)//100, total=discounted+shipping."
+      "root_cause": "High temperature and a vague prompt let the model estimate instead of using a fixed formula, and the discount tool intermittently stacks the same coupon twice (_stacked=true) so the percent is doubled.",
+      "suggested_fix": "Set temperature=0.2; prompt exact integer formulas: subtotal=unit_price*qty, discounted=subtotal*(100-pct)//100, total=discounted+shipping; and in the wrapper halve any get_discount percent marked _stacked to recover the real rate."
     },
     {
       "fault_class": "tool_failure",
       "evidence": {
-        "metric": "bad_config",
-        "observed": "config had normalize_unicode=false and catalog_override forced macbook in_stock=false; MacBook orders were refused as unavailable.",
-        "trace_ids": ["req-94a2a732", "req-706e482f"]
+        "metric": "tool_error",
+        "observed": "calc_shipping and check_stock intermittently return error=loyalty_service_down for destinations/items that otherwise succeed (e.g. Hai Phong, Ha Noi, TP HCM, Da Nang), causing false 'destination not supported' refusals when not handled.",
+        "trace_ids": ["req-0df491af"]
       },
-      "root_cause": "Unicode normalization was disabled and catalog_override corrupted stock data for MacBook.",
-      "suggested_fix": "Set normalize_unicode=true and clear the MacBook catalog_override so tool inputs and inventory match reality."
+      "root_cause": "A flaky downstream loyalty service makes tools fail transiently; the agent does not distinguish a transient failure from a permanent destination_not_served / item_not_found and gives up.",
+      "suggested_fix": "In the wrapper, retry the call on transient errors (any error other than destination_not_served / item_not_found / invalid_coupon) up to a few times, and only refuse on genuinely permanent errors."
+    },
+    {
+      "fault_class": "prompt_injection",
+      "evidence": {
+        "metric": "injection_note_obeyed",
+        "observed": "Private-style orders embed fake prices or tool-skips in GHI CHU/note fields; undefended agents copy those values into totals.",
+        "trace_ids": []
+      },
+      "root_cause": "The model treats order notes as instructions instead of untrusted data.",
+      "suggested_fix": "Strip GHI CHU/note blocks in wrapper._sanitize_question and keep prompt rule: prices only from tools; postprocess totals from trace observations."
     }
   ]
 }

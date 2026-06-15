@@ -1,21 +1,21 @@
 {
   "team": "2A202600705-NguyenMinhHieu",
-  "phase": "public",
-  "headline": 98.09,
+  "phase": "private",
+  "headline": 99.82,
   "sub": {
-    "correct": 0.7983,
-    "quality": 0.8675,
+    "correct": 0.845,
+    "quality": 0.8998,
     "error": 1.0,
-    "latency": 0.607,
-    "cost": 0.4907,
-    "drift": 0.9134,
-    "prompt": 0.8999
+    "latency": 0.736,
+    "cost": 0.4468,
+    "drift": 0.652,
+    "prompt": 0.9198
   },
-  "diag_f1": 0.75,
-  "n": 120,
-  "n_correct": 79,
+  "diag_f1": 0.778,
+  "n": 80,
+  "n_correct": 58,
   "judge_mode": "offline",
   "weights_hash": "e81a8ed58d93",
-  "key_hash": "9a800fa6968d",
-  "sig": "2e58c89176fa75e65b328f829c4aeb37f7dd0a988f5dcb02991ac9db49df9d20"
+  "key_hash": "7e3905b75db0",
+  "sig": "3154ebae64a40fccdcf3e8595eff08524f4ccded723d0b75cc5a8156225391cd"
 }
