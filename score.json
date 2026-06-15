@@ -1,0 +1,21 @@
+{
+  "team": "2A202600705-NguyenMinhHieu",
+  "phase": "public",
+  "headline": 98.09,
+  "sub": {
+    "correct": 0.7983,
+    "quality": 0.8675,
+    "error": 1.0,
+    "latency": 0.607,
+    "cost": 0.4907,
+    "drift": 0.9134,
+    "prompt": 0.8999
+  },
+  "diag_f1": 0.75,
+  "n": 120,
+  "n_correct": 79,
+  "judge_mode": "offline",
+  "weights_hash": "e81a8ed58d93",
+  "key_hash": "9a800fa6968d",
+  "sig": "2e58c89176fa75e65b328f829c4aeb37f7dd0a988f5dcb02991ac9db49df9d20"
+}

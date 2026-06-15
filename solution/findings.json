@@ -1,12 +1,66 @@
 {
-  "team": "TODO-team-name",
+  "team": "2A202600705-NguyenMinhHieu",
   "schema_version": 1,
   "findings": [
     {
+      "fault_class": "cost_blowup",
+      "evidence": {
+        "metric": "total_tokens",
+        "observed": "prac-005 used 70647 total tokens with 10 repeated check_stock calls",
+        "trace_ids": ["req-297ba24e"]
+      },
+      "root_cause": "High temperature, unlimited tool_budget, disabled loop_guard, and verbose context let the model repeatedly call the same tool.",
+      "suggested_fix": "Set temperature=0.2, tool_budget=3, loop_guard=true, reduce context/verbosity, and tell the prompt to call each required tool at most once."
+    },
+    {
       "fault_class": "latency_spike",
-      "evidence": {"metric": "latency_p95_ms", "observed": "TODO from your telemetry", "trace_ids": []},
-      "root_cause": "TODO: what config knob or behavior causes it?",
-      "suggested_fix": "TODO: config change and/or wrapper mitigation"
+      "evidence": {
+        "metric": "latency_ms",
+        "observed": "prac-005 took 426815ms; prac-007 also reached 200588ms",
+        "trace_ids": ["req-297ba24e", "req-ebde702f"]
+      },
+      "root_cause": "Repeated tool calls and excessive prompt/token growth create long-tail slow requests.",
+      "suggested_fix": "Enable loop_guard, cap tool_budget at 3, lower max_steps, avoid unsafe stale cache, and use a concise prompt."
+    },
+    {
+      "fault_class": "tool_overuse",
+      "evidence": {
+        "metric": "tools_used",
+        "observed": "prac-008 called 6 tools including check_stock 4 times; prac-019 called check_stock 4 times",
+        "trace_ids": ["req-5e579069", "req-706e482f"]
+      },
+      "root_cause": "The prompt does not enforce a minimal tool plan and tool_budget=0 leaves calls uncapped.",
+      "suggested_fix": "Use prompt instructions: check_stock once, get_discount once if coupon exists, calc_shipping once if needed; set tool_budget=3."
+    },
+    {
+      "fault_class": "fabrication",
+      "evidence": {
+        "metric": "tools_used_empty",
+        "observed": "prac-001 and prac-016 used no tools, but prac-001 still estimated a VND total and prices.",
+        "trace_ids": ["req-9d5c3809", "req-e0fb667d"]
+      },
+      "root_cause": "The system prompt allows the model to answer from guesses instead of requiring grounded tool data.",
+      "suggested_fix": "Rewrite prompt.txt to require tool-first grounding and to refuse without a total when required tool data is missing."
+    },
+    {
+      "fault_class": "arithmetic_error",
+      "evidence": {
+        "metric": "answer_total_mismatch",
+        "observed": "prac-003 mixed 4*~22M VND with a final ~3.8M VND; prac-006 says 54,000,000*20%=6,400,000 and ends near 64,165 VND.",
+        "trace_ids": ["req-e80ebad8", "req-e9288be6"]
+      },
+      "root_cause": "High temperature and a vague prompt make the model estimate and ramble instead of applying a fixed formula.",
+      "suggested_fix": "Set temperature=0.2 and prompt exact integer formulas: subtotal=unit_price*qty, discounted=subtotal*(100-pct)//100, total=discounted+shipping."
+    },
+    {
+      "fault_class": "tool_failure",
+      "evidence": {
+        "metric": "bad_config",
+        "observed": "config had normalize_unicode=false and catalog_override forced macbook in_stock=false; MacBook orders were refused as unavailable.",
+        "trace_ids": ["req-94a2a732", "req-706e482f"]
+      },
+      "root_cause": "Unicode normalization was disabled and catalog_override corrupted stock data for MacBook.",
+      "suggested_fix": "Set normalize_unicode=true and clear the MacBook catalog_override so tool inputs and inventory match reality."
     }
   ]
 }
